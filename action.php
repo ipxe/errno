@@ -11,17 +11,22 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
     function ipxe_preprocess ( &$event, $param ) {
 	global $ID;
 
-	/* Do nothing on non-error pages */
-	if ( ! preg_match ( '/^[0-9a-f]{8}$/', $ID ) )
+	/* Redirect error pages to error namespace */
+	if ( preg_match ( '/^[0-9a-f]{8}$/', $ID ) ) {
+	    send_redirect ( wl ( "err:".$ID ) );
 	    return;
-	$errno = $ID;
+	}
+
+	/* Do nothing unless we are in the error namespace */
+	if ( ! preg_match ( '/^err:[0-9a-f]{8}$/', $ID ) )
+	    return;
 
 	/* Create empty page if no page yet exists */
 	if ( ! page_exists ( $ID ) ) {
 	    lock ( $ID );
 	    saveWikiText ( $ID, "\n", 'Autocreated' );
 	    unlock ( $ID );
-	    send_redirect ( wl ( $ID, array ( "do" => "show" ), false, "&" ) );
+	    send_redirect ( wl ( $ID ) );
 	}
     }
 
@@ -29,13 +34,13 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 	global $ID;
 	$gitbase = "http://git.ipxe.org/ipxe.git/blob/master:/src/";
 
-	/* Do nothing on non-error pages */
-	if ( ! preg_match ( '/^[0-9a-f]{8}$/', $ID ) )
+	/* Do nothing unless we are in the error namespace */
+	if ( ! preg_match ( '/^err:([0-9a-f]{8})$/', $ID, $matches ) )
 	    return;
-	$errno = $ID;
+	$errno = $matches[1];
 
 	/* Display nothing while editing */
-	if ( ( $_REQUEST['do'] == 'edit' ) || ( $_POST['do']['preview'] ) )
+	if ( isset ( $_REQUEST['do'] ) && ( $_REQUEST['do'] != "show" ) )
 	    return;
 
 	/*
