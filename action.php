@@ -27,7 +27,6 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 
     function ipxe_errno ( &$event, $param ) {
 	global $ID;
-	$errtext = "";
 	$gitbase = "http://git.ipxe.org/ipxe.git/blob/master:/src/";
 
 	/* Do nothing on non-error pages */
@@ -53,30 +52,46 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 			       "errno = '".$errno."'" );
 	foreach ( $query->fetchAll() as $row )
 	    $description = $row['description'];
-	$errtext .= "{{ :clipart:warning.png?90x75|An error}}";
-	$errtext .= "====== Error: ".$description." ======\n";
-	$errtext .= "**(Error number 0x".$errno.")**\n";
 
 	/* Retrieve error instances */
-	$errtext .= "===== Possible sources =====\n";
-	$errtext .= ( "This error originated from one of the following ".
-		      "locations within the iPXE source code:\n" );
 	$query = $dbh->query ( "SELECT filename, line FROM xrefs WHERE ".
 			       "errno = '".$errno."'" );
-	foreach ( $query->fetchAll() as $row ) {
-	    $filename = $row['filename'];
-	    $line = $row['line'];
-	    $gitlink = $gitbase.$filename."#l".$line;
-	    $errtext .= "  * [[".$gitlink."|".$filename." (line ".$line.")]]\n";
-	}
+	$instances = $query->fetchAll();
 
 	/* Close error database */
 	unset ( $dbh );
 
-	/* Add error header block to page */
-	$errtext .= "===== Additional notes =====\n";
+	/* Build up page header */
+	$errtext = "";
+	$errtext .= ( "{{ :clipart:warning.png?90x75|An error}}" );
+	$errtext .= ( "====== Error: ".$description." ======\n" );
+	$errtext .= ( "**(Error number 0x".$errno.")**\n" );
+	$errtext .= ( "===== Possible sources =====\n" );
+	if ( ! empty ( $instances ) ) {
+	    $errtext .= ( "This error originated from one of the following ".
+			  "locations within the iPXE source code:\n" );
+	    foreach ( $instances as $row ) {
+		$filename = $row['filename'];
+		$line = $row['line'];
+		$gitlink = $gitbase.$filename."#l".$line;
+		$errtext .= ( "  * [[".$gitlink."|".$filename.
+			      " (line ".$line.")]]\n" );
+	    }
+	} else {
+	    $errtext .= ( "This error no longer exists in the iPXE source ".
+			  "code.  You should try using the ".
+			  "[[:download|latest version]] of iPXE." );
+	}
+	$errtext .= ( "===== General advice =====\n" );
+	$errtext .= ( "  * Try using the [[:download|latest version]] of ".
+		      "iPXE.  Your problem may have already been fixed.\n" );
+	$errtext .= ( "  * You can [[:contact|contact]] the iPXE ".
+		      "developers and other iPXE users.\n" );
+	$errtext .= ( "===== Additional notes =====\n" );
 	$errtext .= ( "**(Please edit this page to include any of your own ".
 		      "useful hints and tips for fixing this error.)**\n" );
+
+	/* Add error header block to page */
 	$event->data = ( p_render ( 'xhtml', p_get_instructions ( $errtext ),
 				    $info ) ).$event->data;
     }
