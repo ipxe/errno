@@ -74,7 +74,9 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 	unset ( $dbh );
 
 	/* Add error header block to page */
-	$errtext .= "===== User notes =====\n";
+	$errtext .= "===== Additional notes =====\n";
+	$errtext .= ( "**(Please edit this page to include any of your own ".
+		      "useful hints and tips for fixing this error.)**\n" );
 	$event->data = ( p_render ( 'xhtml', p_get_instructions ( $errtext ),
 				    $info ) ).$event->data;
     }
