@@ -92,6 +92,9 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 		      "iPXE.  Your problem may have already been fixed.\n" );
 	$errtext .= ( "  * You can [[:contact|contact]] the iPXE ".
 		      "developers and other iPXE users.\n" );
+	$errtext .= ( "  * [[".$errno."|Refresh]] this page after 24 ".
+		      "hours.  This page is actively monitored, and ".
+		      "further information may be added soon.\n" );
 	$errtext .= ( "===== Additional notes =====\n" );
 	$errtext .= ( "**(Please edit this page to include any of your own ".
 		      "useful hints and tips for fixing this error.)**\n" );
