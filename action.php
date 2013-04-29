@@ -13,12 +13,19 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 
 	/* Redirect error pages to error namespace */
 	if ( preg_match ( '/^[0-9a-f]{8}$/', $ID ) ) {
-	    send_redirect ( wl ( "err:".$ID ) );
+
+	    /* Determine error page */
+	    $page = "err:".( ( substr ( $ID, 0, 2 ) == "7f" ) ?
+			     $ID : substr ( $ID, 0, 6 ) );
+
+	    /* Redirect to error page */
+	    send_redirect ( wl ( $page ) );
+
 	    return;
 	}
 
 	/* Do nothing unless we are in the error namespace */
-	if ( ! preg_match ( '/^err:[0-9a-f]{8}$/', $ID ) )
+	if ( ! preg_match ( '/^err:[0-9a-f]{6,8}$/', $ID ) )
 	    return;
 
 	/* Create empty page if no page yet exists */
@@ -35,7 +42,7 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 	$gitbase = "http://git.ipxe.org/ipxe.git/blob/master:/src/";
 
 	/* Do nothing unless we are in the error namespace */
-	if ( ! preg_match ( '/^err:([0-9a-f]{8})$/', $ID, $matches ) )
+	if ( ! preg_match ( '/^err:([0-9a-f]{6,8})$/', $ID, $matches ) )
 	    return;
 	$errno = $matches[1];
 
@@ -48,19 +55,39 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 	  error_reporting ( E_ALL );
 	*/
 
+	/* Derive base error number (for platform-generated errors) */
+	$base_errno = substr ( $errno, 0, 6 );
+
 	/* Open error database */
 	$dbh = new PDO ( "sqlite:".mediaFN ( "errdb:errors.db" ) );
 
 	/* Retrieve error description */
-	$description = "Unknown error";
+	unset ( $description );
 	$query = $dbh->query ( "SELECT description FROM errors WHERE ".
 			       "errno = '".$errno."'" );
 	foreach ( $query->fetchAll() as $row )
 	    $description = $row['description'];
 
+	/* If no description is available and this is a
+	 * platform-generated error, try obtaining the description for
+	 * the base error.
+	 */
+	if ( ( ! isset ( $description ) ) && ( $errno != $base_errno ) ) { 
+	    $query = $dbh->query ( "SELECT description FROM errors WHERE ".
+				   "errno = '".$base_errno."'" );
+	    foreach ( $query->fetchAll() as $row )
+		$description = $row['description'];
+	}
+
+	/* If no description is available, use default description */
+	if ( ! isset ( $description ) )
+	    $description = "Unknown error";
+
 	/* Retrieve error instances */
 	$query = $dbh->query ( "SELECT filename, line FROM xrefs WHERE ".
-			       "errno = '".$errno."'" );
+			       "errno = '".$errno."' OR ".
+			       "errno = '".$base_errno."' ".
+			       "ORDER BY filename, line" );
 	$instances = $query->fetchAll();
 
 	/* Close error database */
@@ -70,7 +97,7 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 	$errtext = "";
 	$errtext .= ( "{{ :clipart:warning.png?90x75|An error}}" );
 	$errtext .= ( "====== Error: ".$description." ======\n" );
-	$errtext .= ( "**(Error number 0x".$errno.")**\n" );
+	$errtext .= ( "**(Error code ".$errno.")**\n" );
 	$errtext .= ( "===== Possible sources =====\n" );
 	if ( ! empty ( $instances ) ) {
 	    $errtext .= ( "This error originated from one of the following ".
