@@ -25,8 +25,19 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 	}
 
 	/* Do nothing unless we are in the error namespace */
-	if ( ! preg_match ( '/^err:[0-9a-f]{6,8}$/', $ID ) )
+	if ( ! preg_match ( '/^err:([0-9a-f]{6,8})$/', $ID, $matches ) )
 	    return;
+	$errno = $matches[1];
+
+	/* Redirect stale 8-character links to the new 6-character
+	 * page within the error namespace.
+	 */
+	if ( ( strlen ( $errno ) == 8 ) &&
+	     ( substr ( $errno, 0, 2 ) != "7f" ) ) {
+	    $page = "err:".substr ( $errno, 0, 6 );
+	    send_redirect ( wl ( $page ) );
+	    return;
+	}
 
 	/* Create empty page if no page yet exists */
 	if ( ! page_exists ( $ID ) ) {
