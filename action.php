@@ -67,7 +67,8 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 	*/
 
 	/* Derive base error number (for platform-generated errors) */
-	$base_errno = substr ( $errno, 0, 6 );
+	if ( substr ( $errno, 0, 2 ) == "7f" )
+	    $base_errno = ( substr ( $errno, 0, 6 )."00" );
 
 	/* Open error database */
 	$dbh = new PDO ( "sqlite:".mediaFN ( "errdb:errors.db" ) );
@@ -83,7 +84,7 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 	 * platform-generated error, try obtaining the description for
 	 * the base error.
 	 */
-	if ( ( ! isset ( $description ) ) && ( $errno != $base_errno ) ) { 
+	if ( ( ! isset ( $description ) ) && isset ( $base_errno ) ) {
 	    $query = $dbh->query ( "SELECT description FROM errors WHERE ".
 				   "errno = '".$base_errno."'" );
 	    foreach ( $query->fetchAll() as $row )
@@ -95,9 +96,10 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 	    $description = "Unknown error";
 
 	/* Retrieve error instances */
-	$query = $dbh->query ( "SELECT filename, line FROM xrefs WHERE ".
-			       "errno = '".$errno."' OR ".
-			       "errno = '".$base_errno."' ".
+	$query = $dbh->query ( "SELECT DISTINCT filename, line FROM xrefs ".
+			       "WHERE errno = '".$errno."' ".
+			       ( isset ( $base_errno ) ?
+				 "OR errno = '".$base_errno."' " : "" ).
 			       "ORDER BY filename, line" );
 	$instances = $query->fetchAll();
 
