@@ -137,6 +137,10 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 			      "hours.  This page is actively monitored, and ".
 			      "further information may be added soon.\n" );
 	}
+	if ( isset ( $base_errno ) && ( $base_errno != $errno ) ) {
+		$errtext .= ( "===== See also =====\n" );
+		$errtext .= ( "  * Error code [[:err:".$base_errno."]]\n" );
+	}
 	$errtext .= ( "===== Additional notes =====\n" );
 	$errtext .= ( "**(Please edit this page to include any of your own ".
 		      "useful hints and tips for fixing this error.)**\n" );
