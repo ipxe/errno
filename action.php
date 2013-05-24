@@ -6,6 +6,14 @@ if ( ! defined ( 'DOKU_PLUGIN' ) )
 
 require_once ( DOKU_PLUGIN.'action.php' );
 
+function ipxe_permanent_redirect ( $url ) {
+    /* send_redirect() defaults to a 302 code, which causes
+     * Google to complain about "soft 404" errors.
+     */
+    header ( 'Location: '.$url, FALSE, 301 );
+    send_redirect ( $url );
+}
+
 class action_plugin_errno extends DokuWiki_Action_Plugin {
 
     function ipxe_preprocess ( &$event, $param ) {
@@ -19,7 +27,7 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 			     $ID : substr ( $ID, 0, 6 ) );
 
 	    /* Redirect to error page */
-	    send_redirect ( wl ( $page ) );
+	    ipxe_permanent_redirect ( wl ( $page ) );
 
 	    return;
 	}
@@ -35,7 +43,7 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 	if ( ( strlen ( $errno ) == 8 ) &&
 	     ( substr ( $errno, 0, 2 ) != "7f" ) ) {
 	    $page = "err:".substr ( $errno, 0, 6 );
-	    send_redirect ( wl ( $page ) );
+	    ipxe_permanent_redirect ( wl ( $page ) );
 	    return;
 	}
 
