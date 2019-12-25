@@ -58,7 +58,7 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 
     function ipxe_errno ( &$event, $param ) {
 	global $ID;
-	$gitbase = "http://git.ipxe.org/ipxe.git/blob/master:/src/";
+	$gitbase = "http://github.com/ipxe/ipxe/blob/master/src/";
 
 	/* Do nothing unless we are in the error namespace */
 	if ( ! preg_match ( '/^err:([0-9a-f]{6,8})$/', $ID, $matches ) )
@@ -126,7 +126,7 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 	    foreach ( $instances as $row ) {
 		$filename = $row['filename'];
 		$line = $row['line'];
-		$gitlink = $gitbase.$filename."#l".$line;
+		$gitlink = $gitbase.$filename."#L".$line;
 		$errtext .= ( "  * [[".$gitlink."|".$filename.
 			      " (line ".$line.")]]\n" );
 	    }
