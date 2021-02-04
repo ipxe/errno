@@ -120,6 +120,7 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
         $errtext .= ( "====== Error: ".$description." ======\n" );
         $errtext .= ( "**(Error code ".$errno.")**\n" );
         $errtext .= ( "===== Possible sources =====\n" );
+        $filenames = array();
         if ( ! empty ( $instances ) ) {
             $errtext .= ( "This error originated from one of the following ".
                           "locations within the iPXE source code:\n" );
@@ -129,7 +130,9 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
                 $gitlink = $gitbase.$filename."#L".$line;
                 $errtext .= ( "  * [[".$gitlink."|".$filename.
                               " (line ".$line.")]]\n" );
+                $filenames[] = $filename;
             }
+            $filenames = array_unique ( $filenames );
         } else {
             $errtext .= ( "This error no longer exists in the iPXE source ".
                           "code.  You should try using the ".
@@ -138,6 +141,12 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
         $errtext .= ( "===== General advice =====\n" );
         $errtext .= ( "  * Try using the [[:download|latest version]] of ".
                       "iPXE.  Your problem may have already been fixed.\n" );
+        foreach ( $filenames as $filename ) {
+            $path = pathinfo ( $filename );
+            $errtext .= ( "  * Try building iPXE with the ".
+                          "[[:download#debug_builds|debug]] option ".
+                          "''DEBUG=".$path['filename']."''\n" );
+        }
         $errtext .= ( "  * You can [[:contact|contact]] the iPXE ".
                       "developers and other iPXE users.\n" );
         if ( ! empty ( $instances ) ) {
