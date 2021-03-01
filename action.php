@@ -58,7 +58,7 @@ class action_plugin_errno extends DokuWiki_Action_Plugin {
 
     function ipxe_errno ( &$event, $param ) {
         global $ID;
-        $gitbase = "http://github.com/ipxe/ipxe/blob/master/src/";
+        $gitbase = "https://github.com/ipxe/ipxe/blob/master/src/";
 
         /* Do nothing unless we are in the error namespace */
         if ( ! preg_match ( '/^err:([0-9a-f]{6,8})$/', $ID, $matches ) )
